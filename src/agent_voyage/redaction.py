@@ -19,6 +19,14 @@ Le client veut : {envies}. Ce voyage le lui offre : commence par la, c'est la ra
 PROMPT_REFUS = """
 Le client a refuse : {refus}. Ce voyage le comporte : dis-le franchement en une phrase, et ne le presente jamais comme un atout."""
 
+PROMPT_DEMANDE = """Tu es le conseiller d'une agence de voyage. Tu reponds au client en un seul court message.
+Le client n'a encore exprime aucune envie de voyage.
+Regles :
+- ne propose aucun voyage ;
+- si le message ne parle pas de voyage, ne reponds pas a sa question : dis poliment que tu ne traites que les voyages de l'agence ;
+- 1 ou 2 phrases, sans titre ni liste ;
+- demande-lui ses envies parmi : plage, montagne, ville, sport, detente, acces handicap."""
+
 
 def rediger_proposition(message: str, voyage: dict, criteres: dict) -> str:
     """Le voyage est deja choisi en Python : le modele redige seulement la proposition."""
@@ -34,3 +42,8 @@ def rediger_proposition(message: str, voyage: dict, criteres: dict) -> str:
     if refus:
         consigne += PROMPT_REFUS.format(refus=", ".join(refus))
     return modele.invoke([("system", consigne), ("human", message)]).content
+
+
+def rediger_demande(message: str) -> str:
+    """Aucun critere connu : le modele redige seulement la demande de criteres."""
+    return modele.invoke([("system", PROMPT_DEMANDE), ("human", message)]).content
