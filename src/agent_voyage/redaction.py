@@ -16,9 +16,6 @@ Regles :
 PROMPT_ENVIES = """
 Le client veut : {envies}. Ce voyage le lui offre : commence par la, c'est la raison de la proposition."""
 
-PROMPT_REFUS = """
-Le client a refuse : {refus}. Ce voyage le comporte : dis-le franchement en une phrase, et ne le presente jamais comme un atout."""
-
 PROMPT_DEMANDE = """Tu es le conseiller d'une agence de voyage. Tu reponds au client en un seul court message.
 Le client n'a encore exprime aucune envie de voyage.
 Regles :
@@ -32,15 +29,12 @@ def rediger_proposition(message: str, voyage: dict, criteres: dict) -> str:
     """Le voyage est deja choisi en Python : le modele redige seulement la proposition."""
     # Le code donne les faits : les criteres que possede le voyage, lus dans le fichier
     atouts = ", ".join(critere for critere in CRITERES if voyage[critere])
-    # Envies et refus viennent du state, donc de tous les tours, pas du seul dernier message
+    # Les envies viennent du state, donc de tous les tours, pas du seul dernier message
     envies = [critere for critere in CRITERES if criteres.get(critere) is True and voyage[critere]]
-    refus = [critere for critere in CRITERES if criteres.get(critere) is False and voyage[critere]]
     consigne = PROMPT_PROPOSITION.format(nom=voyage["nom"], atouts=atouts)
-    # Chaque consigne n'est donnee que si elle s'applique : sinon le modele invente
+    # La consigne sur les envies n'est donnee que si elle s'applique : sinon le modele invente
     if envies:
         consigne += PROMPT_ENVIES.format(envies=", ".join(envies))
-    if refus:
-        consigne += PROMPT_REFUS.format(refus=", ".join(refus))
     return modele.invoke([("system", consigne), ("human", message)]).content
 
 

@@ -19,8 +19,8 @@ class CriteresExtraits(BaseModel):
 PROMPT_EXTRACTION = """Tu analyses le message d'un client d'une agence de voyage.
 Pour chacun des 6 criteres (plage, montagne, ville, sport, detente, acces_handicap), reponds :
 - true si le client exprime un avis positif sur ce critere ;
-- false s'il exprime un avis negatif ou indifferent sur ce critere ;
-- null s'il ne dit rien sur ce critere.
+- false seulement s'il refuse clairement ce critere ;
+- null s'il n'en dit rien, ou s'il est indifferent.
 Une destination ou le client dit vouloir aller implique les criteres qu'elle possede de facon evidente
 (par exemple, des vacances dans une ville au bord de la mer impliquent plage et ville).
 Un lieu cite sans envie d'y aller, par exemple dans une question de culture generale, n'exprime aucun avis : null.

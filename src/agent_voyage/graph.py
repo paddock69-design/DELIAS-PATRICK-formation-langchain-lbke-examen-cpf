@@ -4,7 +4,7 @@ from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
-from agent_voyage.choix import choisir_voyage
+from agent_voyage.choix import choisir_voyage, aucun_critere
 from agent_voyage.extraction import extraire_criteres
 from agent_voyage.redaction import rediger_demande, rediger_proposition
 
@@ -30,9 +30,11 @@ def extraire(state: State) -> dict:
 
 
 def aiguiller(state: State) -> str:
-    """Etape 3 : au moins un critere rempli ? choisir_voyage renvoie None sinon."""
-    if choisir_voyage(state) is None:
+    """Etape 3 : aucun_critere est vrai on demande, sinon on choisit le voyage ou on signale qu'aucun ne convient."""
+    if aucun_critere(state) is True:
         return "demander"
+    if choisir_voyage(state) is None:
+        return "aucun_voyage"
     return "proposer"
 
 
@@ -44,8 +46,13 @@ def demander(state: State) -> dict:
 def proposer(state: State) -> dict:
     """Etapes 4b et 5b : le voyage est choisi en Python, le modele redige la proposition."""
     voyage = choisir_voyage(state)
-    # Le state entier est passe : la redaction y lit les envies et les refus de tous les tours
+    # Le state entier est passe : la redaction y lit les envies de tous les tours
     return {"reponse_ia": rediger_proposition(state["message_utilisateur"], voyage, state)}
+
+
+def aucun_voyage(state: State) -> dict:
+    """Etape 4c : aucun voyage ne convient, message fixe ecrit en Python, sans le modele."""
+    return {"reponse_ia": "Aucun voyage ne correspond à vos critères. Pouvez-vous préciser vos envies ?"}
 
 
 graph = (
@@ -53,9 +60,11 @@ graph = (
     .add_node(extraire)
     .add_node(demander)
     .add_node(proposer)
+    .add_node(aucun_voyage)
     .add_edge(START, "extraire")
-    .add_conditional_edges("extraire", aiguiller, ["demander", "proposer"])
+    .add_conditional_edges("extraire", aiguiller, ["demander", "proposer", "aucun_voyage"])
     .add_edge("demander", END)
     .add_edge("proposer", END)
+    .add_edge("aucun_voyage", END)
     .compile(name="agent_voyage")
 )
