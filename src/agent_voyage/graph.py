@@ -6,6 +6,7 @@ from langgraph.graph import END, START, StateGraph
 
 from agent_voyage.choix import choisir_voyage
 from agent_voyage.extraction import extraire_criteres
+from agent_voyage.redaction import rediger_proposition
 
 
 class State(TypedDict):
@@ -36,14 +37,15 @@ def aiguiller(state: State) -> str:
 
 
 def demander(state: State) -> dict:
-    """Etape 4a : aucun critere, on en demande. Texte provisoire, le modele viendra au palier 9.2."""
+    """Etape 4a : aucun critere, on en demande. Texte provisoire, le modele viendra au palier 9.2.4."""
     return {"reponse_ia": "(provisoire) Quels sont vos criteres ?"}
 
 
 def proposer(state: State) -> dict:
-    """Etapes 4b et 5b : le voyage est choisi en Python, puis propose. Texte provisoire."""
+    """Etapes 4b et 5b : le voyage est choisi en Python, le modele redige la proposition."""
     voyage = choisir_voyage(state)
-    return {"reponse_ia": f"(provisoire) Je vous propose : {voyage['nom']}"}
+    # Le state entier est passe : la redaction y lit les refus de tous les tours
+    return {"reponse_ia": rediger_proposition(state["message_utilisateur"], voyage, state)}
 
 
 graph = (
