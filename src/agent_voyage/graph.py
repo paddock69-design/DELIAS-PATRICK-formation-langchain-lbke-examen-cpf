@@ -21,9 +21,10 @@ class State(TypedDict):
 
 
 def extraire(state: State) -> dict:
-    """Etape 1 : le modele extrait les criteres du message de l'utilisateur."""
+    """Etapes 1 et 2 : le modele extrait les criteres, seuls ceux cites changent."""
     criteres = extraire_criteres(state["message_utilisateur"])
-    return criteres.model_dump()
+    # None = le client n'en a rien dit : la case n'est pas renvoyee, l'ancienne valeur reste
+    return criteres.model_dump(exclude_none=True)
 
 
 graph = (
