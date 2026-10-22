@@ -4,7 +4,7 @@ from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
-from agent_voyage.choix import choisir_voyage, aucun_critere
+from agent_voyage.choix import choisir_voyage, aucun_critere, GOUTS
 from agent_voyage.extraction import extraire_criteres
 from agent_voyage.redaction import rediger_demande, rediger_proposition
 
@@ -24,9 +24,18 @@ class State(TypedDict):
 
 def extraire(state: State) -> dict:
     """Etapes 1 et 2 : le modele extrait les criteres, seuls ceux cites changent."""
-    criteres = extraire_criteres(state["message_utilisateur"])
-    # None = le client n'en a rien dit : la case n'est pas renvoyee, l'ancienne valeur reste
-    return criteres.model_dump(exclude_none=True)
+    criteres = extraire_criteres(state["message_utilisateur"],
+                                 state.get("reponse_ia", ""))
+    mise_a_jour = {}
+    # Choix 1 du 22/10 : un non a la proposition efface les envies (True), les refus (False) restent
+    if criteres.refuse_proposition:
+        for gout in GOUTS:
+            if state.get(gout) is True:
+                mise_a_jour[gout] = None
+    # None non renvoye = le client n'en a rien dit, l'ancienne valeur reste
+    # refuse_proposition n'est pas un critere : il ne part pas dans le state
+    mise_a_jour.update(criteres.model_dump(exclude_none=True, exclude={"refuse_proposition"}))
+    return mise_a_jour
 
 
 def aiguiller(state: State) -> str:
@@ -40,7 +49,8 @@ def aiguiller(state: State) -> str:
 
 def demander(state: State) -> dict:
     """Etape 4a : aucun critere connu, le modele redige la demande de criteres."""
-    return {"reponse_ia": rediger_demande(state["message_utilisateur"])}
+    return {"reponse_ia": rediger_demande(state["message_utilisateur"],
+                                          state.get("reponse_ia", ""))}
 
 
 def proposer(state: State) -> dict:

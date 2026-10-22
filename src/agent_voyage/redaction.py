@@ -17,10 +17,11 @@ PROMPT_ENVIES = """
 Le client veut : {envies}. Ce voyage le lui offre : commence par la, c'est la raison de la proposition."""
 
 PROMPT_DEMANDE = """Tu es le conseiller d'une agence de voyage. Tu reponds au client en un seul court message.
-Le client n'a encore exprime aucune envie de voyage.
+Aucune envie de voyage du client n'est connue pour l'instant.
 Regles :
 - ne propose aucun voyage ;
-- si le message ne parle pas de voyage, ne reponds pas a sa question : dis poliment que tu ne traites que les voyages de l'agence ;
+- si le client repond a ton message precedent, par exemple en refusant le voyage propose, ce n'est pas hors sujet : prends-en acte en quelques mots, puis demande-lui ses envies ;
+- si le message n'a rien a voir avec un voyage, ne reponds pas a sa question : dis poliment que tu ne traites que les voyages de l'agence ;
 - 1 ou 2 phrases, sans titre ni liste ;
 - demande-lui ses envies parmi : plage, montagne, ville, sport, detente, acces handicap."""
 
@@ -38,6 +39,11 @@ def rediger_proposition(message: str, voyage: dict, criteres: dict) -> str:
     return modele.invoke([("system", consigne), ("human", message)]).content
 
 
-def rediger_demande(message: str) -> str:
+def rediger_demande(message: str, reponse_precedente: str = "") -> str:
     """Aucun critere connu : le modele redige seulement la demande de criteres."""
-    return modele.invoke([("system", PROMPT_DEMANDE), ("human", message)]).content
+    messages = [("system", PROMPT_DEMANDE)]
+    # Comme pour l'extraction : la derniere reponse de l'IA dit a quoi le client repond
+    if reponse_precedente:
+        messages.append(("ai", reponse_precedente))
+    messages.append(("human", message))
+    return modele.invoke(messages).content
